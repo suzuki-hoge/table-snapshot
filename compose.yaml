@@ -1,0 +1,17 @@
+services:
+  mysql80:
+    container_name: table-snapshot-mysql80
+    build: ./docker/mysql80
+    ports:
+      - 19000:3306
+    volumes:
+      - ./docker/mysql80/create-table.sql:/docker-entrypoint-initdb.d/create-table.sql
+      - table-snapshot-mysql80:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: table-snapshot
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+
+volumes:
+  table-snapshot-mysql80:

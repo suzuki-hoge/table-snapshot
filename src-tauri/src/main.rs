@@ -1,15 +1,11 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use table_snapshot::database::mysql;
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {name}! You've been greeted from Rust!")
-}
+fn main() -> anyhow::Result<()> {
+    let user = String::from("user");
+    let password = String::from("password");
+    let host = String::from("127.0.0.1");
+    let port = String::from("19000");
+    let schema = String::from("table-snapshot");
 
-fn main() {
-    tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    mysql::dump(&user, &password, &host, &port, &schema)
 }
