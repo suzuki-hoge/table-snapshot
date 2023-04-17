@@ -1,10 +1,10 @@
 use itertools::Itertools;
 
-use crate::database::base::Table;
-use crate::database::mysql::base::{create_connection, get_column_schemata, get_rows, get_table_schemata};
+use crate::database::mysql::query::{create_connection, get_column_schemata, get_rows, get_table_schemata};
+use crate::database::types::Table;
 
-mod base;
-mod column;
+mod parser;
+mod query;
 
 pub fn dump(user: &str, password: &str, host: &str, port: &str, schema: &str) -> anyhow::Result<()> {
     let tables = get_tables(user, password, host, port, schema)?;
@@ -12,7 +12,7 @@ pub fn dump(user: &str, password: &str, host: &str, port: &str, schema: &str) ->
         println!("{}", &table.name);
         println!("    {}", &table.column_names.join(", "));
         for row in &table.rows {
-            println!("    {}", row.columns.iter().map(|c| c.show()).join(", "));
+            println!("    {} ( {} )", row.columns.iter().map(|c| c.show()).join(", "), row.hash);
         }
     }
 

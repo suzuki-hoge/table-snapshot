@@ -4,8 +4,8 @@ use mysql::{from_row, Conn, Opts, OptsBuilder};
 use r2d2::ManageConnection;
 use r2d2_mysql::MysqlConnectionManager;
 
-use crate::database::base::Row;
-use crate::database::mysql::column;
+use crate::database::mysql::parser;
+use crate::database::types::Row;
 
 pub struct TableSchema {
     pub table_name: String,
@@ -82,10 +82,10 @@ pub fn get_rows(
             .map(|x| x.unwrap())
             .map(|row| {
                 (0..column_schemata.len())
-                    .map(|i| column::parse(&column_schemata[i], row.get(i).unwrap()))
+                    .map(|i| parser::parse(&column_schemata[i], row.get(i).unwrap()))
                     .collect_vec()
             })
-            .map(|columns| Row { columns })
+            .map(Row::new)
             .collect()
     })
     .map_err(|e| anyhow!(e))
