@@ -1,8 +1,8 @@
-use crate::database::mysql::query::ColumnSchema;
-use crate::database::types::Column;
-use crate::database::types::Column::{
+use crate::core::types::Column;
+use crate::core::types::Column::{
     BinaryString, BitNumber, DateString, JsonString, ParseError, SimpleNumber, SimpleString,
 };
+use crate::dump::mysql::schema_query::ColumnSchema;
 
 pub fn parse(column_schema: &ColumnSchema, value: String) -> Column {
     match column_schema.data_type.as_str() {
@@ -22,9 +22,9 @@ pub fn parse(column_schema: &ColumnSchema, value: String) -> Column {
 
 #[cfg(test)]
 mod parse_tests {
-    use crate::database::mysql::parser::parse;
-    use crate::database::mysql::query::ColumnSchema;
-    use crate::database::types::Column;
+    use crate::core::types::Column;
+    use crate::dump::mysql::column_parser::parse;
+    use crate::dump::mysql::schema_query::ColumnSchema;
 
     fn sut(data_type: &str, column_type: &str, value: &str) -> Column {
         parse(

@@ -1,11 +1,12 @@
+use crate::core::connector::Connector;
 use anyhow::anyhow;
 use itertools::Itertools;
 use mysql::{from_row, Conn, Opts, OptsBuilder};
 use r2d2::ManageConnection;
 use r2d2_mysql::MysqlConnectionManager;
 
-use crate::database::mysql::parser;
-use crate::database::types::Row;
+use crate::core::types::Row;
+use crate::dump::mysql::column_parser;
 
 pub struct TableSchema {
     pub table_name: String,
@@ -27,8 +28,8 @@ impl ColumnSchema {
     }
 }
 
-pub fn create_connection(user: &str, password: &str, host: &str, port: &str, schema: &str) -> anyhow::Result<Conn> {
-    let url = format!("mysql://{user}:{password}@{host}:{port}/{schema}");
+pub fn create_connection(connector: &Connector) -> anyhow::Result<Conn> {
+    let url = connector.get_url();
     let opt = Opts::from_url(&url).unwrap();
     let builder = OptsBuilder::from_opts(opt);
     let manager = MysqlConnectionManager::new(builder);
@@ -82,7 +83,7 @@ pub fn get_rows(
             .map(|x| x.unwrap())
             .map(|row| {
                 (0..column_schemata.len())
-                    .map(|i| parser::parse(&column_schemata[i], row.get(i).unwrap()))
+                    .map(|i| column_parser::parse(&column_schemata[i], row.get(i).unwrap()))
                     .collect_vec()
             })
             .map(Row::new)

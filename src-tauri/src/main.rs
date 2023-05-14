@@ -1,11 +1,11 @@
-use table_snapshot::database::mysql;
+use table_snapshot::core::connector::Connector;
+use table_snapshot::core::connector::Rdbms::Mysql;
+use table_snapshot::dump::mysql_dump;
 
 fn main() -> anyhow::Result<()> {
-    let user = String::from("user");
-    let password = String::from("password");
-    let host = String::from("127.0.0.1");
-    let port = String::from("19000");
-    let schema = String::from("table-snapshot");
+    let connector = Connector::mysql("user", "password", "127.0.0.1", "19000", "testdata");
 
-    mysql::dump(&user, &password, &host, &port, &schema)
+    match connector.rdbms {
+        Mysql => mysql_dump(&connector),
+    }
 }

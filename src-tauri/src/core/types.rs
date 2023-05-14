@@ -1,4 +1,4 @@
-use crate::database::types::Column::{
+use crate::core::types::Column::{
     BinaryString, BitNumber, DateString, JsonString, ParseError, SimpleNumber, SimpleString,
 };
 use itertools::Itertools;
