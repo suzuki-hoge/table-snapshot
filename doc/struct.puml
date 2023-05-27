@@ -1,0 +1,38 @@
+@startuml
+
+object Table {
+    hash
+}
+
+object Row {
+    hash
+}
+
+object ColValue
+
+database "Database" as DB1 {
+}
+
+database "Database" as DB2 {
+}
+
+DB1 .d..> Table : dump
+Table -d-> "*" Row
+Row -d-> "*" ColValue
+
+Table .u.> DB2 : save
+
+object Snapshot
+
+DB2 .d.> Snapshot : load
+
+object TableSummary {
+    name
+    hash
+}
+
+Snapshot -d-> TableSummary
+TableSummary .l.> "*" Table : load
+
+
+@enduml

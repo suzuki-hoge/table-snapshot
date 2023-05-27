@@ -1,10 +1,10 @@
-use crate::core::types::Column;
-use crate::core::types::Column::{
+use crate::core::types::ColValue;
+use crate::core::types::ColValue::{
     BinaryString, BitNumber, DateString, JsonString, ParseError, SimpleNumber, SimpleString,
 };
 use crate::dump::mysql::schema_query::ColumnSchema;
 
-pub fn parse(column_schema: &ColumnSchema, value: String) -> Column {
+pub fn parse(column_schema: &ColumnSchema, value: String) -> ColValue {
     match column_schema.data_type.as_str() {
         "tinyint" | "smallint" | "mediumint" | "int" | "bigint" => SimpleNumber(value),
         "decimal" | "float" | "double" => SimpleNumber(value),
@@ -22,11 +22,11 @@ pub fn parse(column_schema: &ColumnSchema, value: String) -> Column {
 
 #[cfg(test)]
 mod parse_tests {
-    use crate::core::types::Column;
+    use crate::core::types::ColValue;
     use crate::dump::mysql::column_parser::parse;
     use crate::dump::mysql::schema_query::ColumnSchema;
 
-    fn sut(data_type: &str, column_type: &str, value: &str) -> Column {
+    fn sut(data_type: &str, column_type: &str, value: &str) -> ColValue {
         parse(
             &ColumnSchema {
                 column_name: "col_test".to_string(),

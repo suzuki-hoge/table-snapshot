@@ -1,41 +1,100 @@
-use crate::core::types::Column::{
-    BinaryString, BitNumber, DateString, JsonString, ParseError, SimpleNumber, SimpleString,
-};
 use itertools::Itertools;
+use std::collections::HashMap;
+use uuid::Uuid;
+
+use crate::core::types::ColValue::{
+    BinaryString, BitNumber, DateString, JsonString, Null, ParseError, SimpleNumber, SimpleString,
+};
+
+pub type SnapshotId = String;
+
+pub type TableName = String;
+
+pub type ColName = String;
+
+pub type PrimaryValue = String;
+
+pub type RowHash = String;
+
+#[derive(Debug)]
+pub struct Snapshot {
+    snapshot_id: SnapshotId,
+    tables: Vec<Table>,
+}
+
+impl Snapshot {
+    pub fn new(tables: Vec<Table>) -> Self {
+        let snapshot_id = Uuid::new_v4().to_string();
+        Self { snapshot_id, tables }
+    }
+
+    pub fn show(&self) {
+        println!("{}", &self.snapshot_id);
+        for table in &self.tables {
+            println!("{}", &table.name);
+            println!("    {}", &table.col_names.join(", "));
+            for row in &table.rows {
+                println!("    {} ( {} )", row.col_values.iter().map(|c| c.show()).join(", "), row.hash);
+            }
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct Table {
-    pub name: String,
-    pub column_names: Vec<String>,
+    pub name: TableName,
+    pub primary_col_name: ColName,
+    pub col_names: Vec<ColName>,
     pub rows: Vec<Row>,
+}
+
+impl Table {
+    pub fn new<S: Into<String>>(name: S, col_names: Vec<S>, rows: Vec<Row>) -> Self {
+        // todo: id
+        Self {
+            name: name.into(),
+            primary_col_name: "id".to_string(),
+            col_names: col_names.into_iter().map(|col_name| col_name.into()).collect(),
+            rows,
+        }
+    }
+
+    pub fn get_rows_with_col_name(&self) -> Vec<HashMap<&ColName, &ColValue>> {
+        self.rows
+            .iter()
+            .map(|row| self.col_names.iter().enumerate().map(|(i, col_name)| (col_name, &row.col_values[i])).collect())
+            .collect()
+    }
 }
 
 #[derive(Debug)]
 pub struct Row {
-    pub columns: Vec<Column>,
-    pub hash: String,
+    pub primary_value: PrimaryValue,
+    pub col_values: Vec<ColValue>,
+    pub hash: RowHash,
 }
 
 impl Row {
-    pub fn new(columns: Vec<Column>) -> Self {
-        let cols = columns.iter().map(|c| c.raw()).join(",");
-        let hash = format!("{:?}", md5::compute(cols));
-        Self { columns, hash }
+    pub fn new<S: Into<String>>(primary_value: S, col_values: Vec<ColValue>) -> Self {
+        let raws = col_values.iter().map(|c| c.raw()).join(",");
+        let hash = format!("{:?}", md5::compute(raws));
+        Self { primary_value: primary_value.into(), col_values, hash }
     }
 }
 
 #[derive(Eq, PartialEq, Debug)]
-pub enum Column {
+pub enum ColValue {
     SimpleNumber(String),
     BitNumber(String),
     SimpleString(String),
     DateString(String),
     BinaryString(String),
     JsonString(String),
+    Null,
     ParseError(String),
 }
 
-impl Column {
+impl ColValue {
     pub fn show(&self) -> String {
         match self {
             SimpleNumber(v) => v.to_string(),
@@ -44,6 +103,7 @@ impl Column {
             DateString(v) => format!(r#""{v}""#),
             BinaryString(_) => "binary".to_string(),
             JsonString(v) => v.to_string(),
+            Null => "<null>".to_string(),
             ParseError(_) => "parse error".to_string(),
         }
     }
@@ -56,6 +116,7 @@ impl Column {
             DateString(v) => v.to_string(),
             BinaryString(v) => v.to_string(),
             JsonString(v) => v.to_string(),
+            Null => format!("{:?}", md5::compute("<null>")),
             ParseError(_) => "parse error".to_string(),
         }
     }

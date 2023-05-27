@@ -1,7 +1,7 @@
 use crate::core::connector::Connector;
 use itertools::Itertools;
 
-use crate::core::types::Table;
+use crate::core::types::{Snapshot, Table};
 use crate::dump::mysql::schema_query::{create_connection, get_column_schemata, get_rows, get_table_schemata};
 
 mod column_parser;
@@ -9,13 +9,10 @@ mod schema_query;
 
 pub fn dump(connector: &Connector) -> anyhow::Result<()> {
     let tables = get_tables(connector)?;
-    for table in &tables {
-        println!("{}", &table.name);
-        println!("    {}", &table.column_names.join(", "));
-        for row in &table.rows {
-            println!("    {} ( {} )", row.columns.iter().map(|c| c.show()).join(", "), row.hash);
-        }
-    }
+
+    let snapshot = Snapshot::new(tables);
+
+    snapshot.show();
 
     Ok(())
 }
@@ -32,11 +29,11 @@ fn get_tables(connector: &Connector) -> anyhow::Result<Vec<Table>> {
 
         let rows = get_rows(&mut conn, &table_schema, &column_schemata)?;
 
-        tables.push(Table {
-            name: table_schema.table_name,
-            column_names: column_schemata.into_iter().map(|column_schema| column_schema.column_name).collect_vec(),
+        tables.push(Table::new(
+            table_schema.table_name,
+            column_schemata.into_iter().map(|column_schema| column_schema.column_name).collect_vec(),
             rows,
-        });
+        ));
     }
 
     Ok(tables)

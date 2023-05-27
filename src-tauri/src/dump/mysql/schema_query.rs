@@ -86,7 +86,7 @@ pub fn get_rows(
                     .map(|i| column_parser::parse(&column_schemata[i], row.get(i).unwrap()))
                     .collect_vec()
             })
-            .map(Row::new)
+            .map(|cols| Row::new("todo1".to_string(), cols))
             .collect()
     })
     .map_err(|e| anyhow!(e))
