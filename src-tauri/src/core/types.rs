@@ -1,5 +1,6 @@
-use itertools::Itertools;
 use std::collections::HashMap;
+
+use itertools::Itertools;
 use uuid::Uuid;
 
 use crate::core::types::ColValue::{
@@ -14,7 +15,21 @@ pub type ColName = String;
 
 pub type PrimaryValue = String;
 
-pub type RowHash = String;
+pub type Hash = String;
+
+#[derive(Debug)]
+pub struct TableSummary<'a> {
+    pub snapshot_id: &'a SnapshotId,
+    pub table_name: &'a TableName,
+    pub hash: Hash,
+}
+
+impl<'a> TableSummary<'a> {
+    pub fn new(snapshot_id: &'a SnapshotId, table_name: &'a TableName, rows: &[Row]) -> Self {
+        let hash = format!("{:?}", md5::compute(rows.iter().map(|row| &row.hash).join("")));
+        Self { snapshot_id, table_name, hash }
+    }
+}
 
 #[derive(Debug)]
 pub struct Snapshot {
@@ -71,18 +86,18 @@ impl Table {
 pub struct Row {
     pub primary_value: PrimaryValue,
     pub col_values: Vec<ColValue>,
-    pub hash: RowHash,
+    pub hash: Hash,
 }
 
 impl Row {
-    pub fn new<S: Into<String>>(primary_value: S, col_values: Vec<ColValue>) -> Self {
+    pub fn new<S: Into<PrimaryValue>>(primary_value: S, col_values: Vec<ColValue>) -> Self {
         let raws = col_values.iter().map(|c| c.raw()).join(",");
         let hash = format!("{:?}", md5::compute(raws));
         Self { primary_value: primary_value.into(), col_values, hash }
     }
 }
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub enum ColValue {
     SimpleNumber(String),
     BitNumber(String),
@@ -95,6 +110,13 @@ pub enum ColValue {
 }
 
 impl ColValue {
+    pub fn as_primary_value(&self) -> PrimaryValue {
+        match self {
+            SimpleNumber(v) | BitNumber(v) | SimpleString(v) | DateString(v) | JsonString(v) => v.to_string(),
+            Null | BinaryString(_) | ParseError(_) => unreachable!(),
+        }
+    }
+
     pub fn show(&self) -> String {
         match self {
             SimpleNumber(v) => v.to_string(),

@@ -5,16 +5,34 @@ use mysql::{from_row, Conn, Opts, OptsBuilder};
 use r2d2::ManageConnection;
 use r2d2_mysql::MysqlConnectionManager;
 
-use crate::core::types::Row;
+use crate::core::types::{ColName, Row, TableName};
 use crate::dump::mysql::column_parser;
 
 pub struct TableSchema {
-    pub table_name: String,
+    pub table_name: TableName,
 }
 
 #[derive(Debug)]
+pub struct ColumnSchemata {
+    primary_col: ColumnSchema,
+    cols: Vec<ColumnSchema>,
+}
+
+impl ColumnSchemata {
+    pub fn get_cols(&self) -> Vec<&ColumnSchema> {
+        let mut cols = self.cols.iter().collect_vec();
+        cols.insert(0, &self.primary_col);
+        cols
+    }
+
+    pub fn len(&self) -> usize {
+        self.cols.len() + 1
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct ColumnSchema {
-    pub column_name: String,
+    pub col_name: ColName,
     pub data_type: String,
     pub column_type: String,
 }
@@ -22,8 +40,8 @@ pub struct ColumnSchema {
 impl ColumnSchema {
     pub fn as_col(&self) -> String {
         match self.data_type.as_str() {
-            "bit" => format!("bin({})", self.column_name),
-            _ => self.column_name.to_string(),
+            "bit" => format!("bin({})", self.col_name),
+            _ => self.col_name.to_string(),
         }
     }
 }
@@ -50,44 +68,54 @@ pub fn get_table_schemata(conn: &mut Conn, schema: &str) -> anyhow::Result<Vec<T
         .map_err(|e| anyhow!(e))
 }
 
-pub fn get_column_schemata(
-    conn: &mut Conn,
-    schema: &str,
-    table_schema: &TableSchema,
-) -> anyhow::Result<Vec<ColumnSchema>> {
-    conn.query(
-        format!("select column_name, data_type, column_type from information_schema.columns where table_schema = '{}' and table_name = '{}' order by ordinal_position", schema, table_schema.table_name))
+pub fn get_col_schemata(conn: &mut Conn, schema: &str, table_schema: &TableSchema) -> anyhow::Result<ColumnSchemata> {
+    let unique_cols:Vec<ColumnSchema> = conn.query(
+        format!("select column_name, data_type, column_type from information_schema.columns where table_schema = '{}' and table_name = '{}' and column_key = 'PRI'", schema, table_schema.table_name))
         .map(|result| {
             result
                 .map(|x| x.unwrap())
                 .map(|row|{
                     let (column_name, data_type, column_type) = from_row(row);
-                    ColumnSchema { column_name, data_type, column_type}
+                    ColumnSchema { col_name: column_name, data_type, column_type}
                 })
-                .collect()
-        }).map_err(|e|anyhow!(e))
+                .collect_vec()
+        }).map_err(|e|anyhow!(e))?;
+    // todo: case [ no primary col ]
+    let primary_col = unique_cols[0].clone();
+
+    let cols:Vec<ColumnSchema> = conn.query(
+        format!("select column_name, data_type, column_type from information_schema.columns where table_schema = '{}' and table_name = '{}' and column_key = '' order by ordinal_position", schema, table_schema.table_name))
+        .map(|result| {
+            result
+                .map(|x| x.unwrap())
+                .map(|row|{
+                    let (column_name, data_type, column_type) = from_row(row);
+                    ColumnSchema { col_name: column_name, data_type, column_type}
+                })
+                .collect_vec()
+        }).map_err(|e|anyhow!(e))?;
+
+    Ok(ColumnSchemata { primary_col, cols })
 }
 
 pub fn get_rows(
     conn: &mut Conn,
     table_schema: &TableSchema,
-    column_schemata: &[ColumnSchema],
+    column_schemata: &ColumnSchemata,
 ) -> anyhow::Result<Vec<Row>> {
-    conn.query(format!(
-        "select {} from {}",
-        column_schemata.iter().map(|cs| cs.as_col()).join(","),
-        table_schema.table_name
-    ))
-    .map(|result| {
-        result
-            .map(|x| x.unwrap())
-            .map(|row| {
-                (0..column_schemata.len())
-                    .map(|i| column_parser::parse(&column_schemata[i], row.get(i).unwrap()))
-                    .collect_vec()
-            })
-            .map(|cols| Row::new("todo1".to_string(), cols))
-            .collect()
-    })
-    .map_err(|e| anyhow!(e))
+    let cols = column_schemata.get_cols();
+
+    conn.query(format!("select {} from {}", cols.iter().map(|cs| cs.as_col()).join(","), table_schema.table_name))
+        .map(|result| {
+            result
+                .map(|x| x.unwrap())
+                .map(|row| {
+                    (0..column_schemata.len())
+                        .map(|i| column_parser::parse(cols[i], row.get(i).unwrap()))
+                        .collect_vec()
+                })
+                .map(|cols| Row::new(cols[0].clone().as_primary_value(), cols))
+                .collect()
+        })
+        .map_err(|e| anyhow!(e))
 }

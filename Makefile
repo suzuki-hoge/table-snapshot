@@ -19,4 +19,4 @@ down:
 	docker compose down --volumes
 
 mysql80:
-	docker compose exec mysql80 mysql -h localhost -u user -ppassword table-snapshot
+	docker compose exec testdata-mysql80 mysql -h localhost -u user -ppassword testdata

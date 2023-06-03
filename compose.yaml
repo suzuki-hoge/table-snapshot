@@ -1,24 +1,24 @@
 services:
   table-snapshot:
-    build: ./docker/testdata-mysql80
-    ports:
-      - 19000:3306
-    volumes:
-      - ./docker/testdata-mysql80/init.d:/docker-entrypoint-initdb.d
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: testdata
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-
-  testdata-mysql80:
     build: ./docker/table-snapshot
     ports:
-      - 19001:3306
+      - 19000:3306
     volumes:
       - ./docker/table-snapshot/init.d:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: table-snapshot
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+
+  testdata-mysql80:
+    build: ./docker/testdata-mysql80
+    ports:
+      - 19001:3306
+    volumes:
+      - ./docker/testdata-mysql80/init.d:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: testdata
       MYSQL_USER: user
       MYSQL_PASSWORD: password

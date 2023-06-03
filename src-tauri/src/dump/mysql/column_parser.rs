@@ -29,7 +29,7 @@ mod parse_tests {
     fn sut(data_type: &str, column_type: &str, value: &str) -> ColValue {
         parse(
             &ColumnSchema {
-                column_name: "col_test".to_string(),
+                col_name: "col_test".to_string(),
                 data_type: data_type.to_string(),
                 column_type: column_type.to_string(),
             },

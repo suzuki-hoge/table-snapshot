@@ -3,13 +3,13 @@ use std::collections::{BTreeSet, HashMap};
 
 use itertools::Itertools;
 
-use crate::core::types::{ColName, ColValue, PrimaryValue, RowHash, Table};
+use crate::core::types::{ColName, ColValue, Hash, PrimaryValue, Table};
 use crate::diff::types::ColDiff::{Added, Deleted, NoValue, Stay};
 use crate::diff::types::{ColDiffs, SnapshotDiff};
 
 mod types;
 
-type Rows<'a> = HashMap<&'a PrimaryValue, (&'a RowHash, Cols<'a>)>;
+type Rows<'a> = HashMap<&'a PrimaryValue, (&'a Hash, Cols<'a>)>;
 type Cols<'a> = HashMap<&'a ColName, &'a ColValue>;
 
 pub fn create_snapshot_diff<'a>(table1: Option<&'a Table>, table2: Option<&'a Table>) -> SnapshotDiff<'a> {
