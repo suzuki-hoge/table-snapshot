@@ -16,7 +16,7 @@ pub fn parse(column_schema: &ColumnSchema, value: String) -> ColValue {
         "tinytext" | "mediumtext" | "text" | "longtext" => SimpleString(value),
         "enum" | "set" => SimpleString(value),
         "json" => JsonString(value),
-        _ => ParseError(value),
+        _ => ParseError,
     }
 }
 

@@ -18,16 +18,25 @@ pub type PrimaryValue = String;
 pub type Hash = String;
 
 #[derive(Debug)]
-pub struct TableSummary<'a> {
-    pub snapshot_id: &'a SnapshotId,
-    pub table_name: &'a TableName,
+pub struct TableSummary {
+    pub snapshot_id: SnapshotId,
+    pub table_name: TableName,
     pub hash: Hash,
+    pub primary_col_name: ColName,
+    pub col_names: Vec<ColName>,
 }
 
-impl<'a> TableSummary<'a> {
-    pub fn new(snapshot_id: &'a SnapshotId, table_name: &'a TableName, rows: &[Row]) -> Self {
-        let hash = format!("{:?}", md5::compute(rows.iter().map(|row| &row.hash).join("")));
-        Self { snapshot_id, table_name, hash }
+impl TableSummary {
+    pub fn new(
+        snapshot_id: SnapshotId,
+        table_name: TableName,
+        primary_col_name: ColName,
+        col_names: Vec<ColName>,
+        rows: &[Row],
+    ) -> Self {
+        let row_hashes = rows.iter().map(|row| &row.hash).join("");
+        let hash = format!("{:?}", md5::compute(format!("{}{}{}", primary_col_name, col_names.join(""), row_hashes)));
+        Self { snapshot_id, table_name, hash, primary_col_name, col_names }
     }
 }
 
@@ -84,16 +93,16 @@ impl Table {
 
 #[derive(Debug)]
 pub struct Row {
+    pub hash: Hash,
     pub primary_value: PrimaryValue,
     pub col_values: Vec<ColValue>,
-    pub hash: Hash,
 }
 
 impl Row {
     pub fn new<S: Into<PrimaryValue>>(primary_value: S, col_values: Vec<ColValue>) -> Self {
         let raws = col_values.iter().map(|c| c.raw()).join(",");
         let hash = format!("{:?}", md5::compute(raws));
-        Self { primary_value: primary_value.into(), col_values, hash }
+        Self { hash, primary_value: primary_value.into(), col_values }
     }
 }
 
@@ -106,14 +115,14 @@ pub enum ColValue {
     BinaryString(String),
     JsonString(String),
     Null,
-    ParseError(String),
+    ParseError,
 }
 
 impl ColValue {
     pub fn as_primary_value(&self) -> PrimaryValue {
         match self {
             SimpleNumber(v) | BitNumber(v) | SimpleString(v) | DateString(v) | JsonString(v) => v.to_string(),
-            Null | BinaryString(_) | ParseError(_) => unreachable!(),
+            Null | BinaryString(_) | ParseError => unreachable!(),
         }
     }
 
@@ -126,7 +135,7 @@ impl ColValue {
             BinaryString(_) => "binary".to_string(),
             JsonString(v) => v.to_string(),
             Null => "<null>".to_string(),
-            ParseError(_) => "parse error".to_string(),
+            ParseError => "parse error".to_string(),
         }
     }
 
@@ -139,7 +148,38 @@ impl ColValue {
             BinaryString(v) => v.to_string(),
             JsonString(v) => v.to_string(),
             Null => format!("{:?}", md5::compute("<null>")),
-            ParseError(_) => "parse error".to_string(),
+            ParseError => "parse error".to_string(),
+        }
+    }
+
+    pub fn serialize(&self) -> String {
+        match self {
+            SimpleNumber(v) => format!(r#""SimpleNumber.{v}""#),
+            BitNumber(v) => format!(r#""BitNumber.{v}""#),
+            SimpleString(v) => format!(r#""SimpleString.{v}""#),
+            DateString(v) => format!(r#""DateString.{v}""#),
+            BinaryString(v) => format!(r#""BinaryString.{v}""#),
+            JsonString(v) => format!(r#""JsonString.{}""#, v.replace('"', r#"\""#)),
+            Null => r#""Null.""#.to_string(),
+            ParseError => r#""ParseError.""#.to_string(),
+        }
+    }
+
+    pub fn deserialize(s: String) -> Self {
+        let s = &s[1..s.len() - 1];
+        let sp = s.split('.').collect_vec();
+        let p1 = sp[0];
+        let p2 = sp[1];
+        match p1 {
+            "SimpleNumber" => SimpleNumber(p2.to_string()),
+            "BitNumber" => BitNumber(p2.to_string()),
+            "SimpleString" => SimpleString(p2.to_string()),
+            "DateString" => DateString(p2.to_string()),
+            "BinaryString" => BinaryString(p2.to_string()),
+            "JsonString" => JsonString(p2.replace('\\', "")),
+            "Null" => Null,
+            "ParseError" => ParseError,
+            _ => unreachable!(),
         }
     }
 }

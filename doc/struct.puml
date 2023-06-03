@@ -1,15 +1,8 @@
 @startuml
 
-object Table {
-    table_name
-    table_hash
-}
-
-object Row {
-    row_hash
-}
-
-object ColValue
+'
+' database
+'
 
 database "Database" as DB1 {
 }
@@ -17,33 +10,62 @@ database "Database" as DB1 {
 database "Database" as DB2 {
 }
 
+'
+' dump
+'
+
 object "TableSummary" as TS1 {
     snapshot_id
     table_name
-    table_hash
+    hash
+    primary_col_name
+    col_names
 }
 
-DB1 .r..> "*" Table : dump
-Table -d-> "*" Row
-Row -d-> "*" ColValue
-
-Table -u-> TS1
-TS1 .u.> DB2 : save
-
-object Snapshot {
-    snapshot_id
+object "Row" as R1 {
+    primary_value
+    hash
 }
 
-DB2 .d.> Snapshot : load
+'
+' load
+'
 
 object "TableSummary" as TS2 {
     snapshot_id
     table_name
-    table_hash
+    hash
+    primary_col_name
+    col_names
 }
 
-Snapshot -d-> "*" TS2
-TS2 .l.> Table : load
+object Table {
+    name
+    primary_col_name
+    col_names
+}
 
+object "Row" as R2 {
+    primary_value
+    hash
+}
+
+object ColValue
+
+'
+' relation
+'
+
+' dump
+DB1 .d.> TS1 : dump
+DB1 .d.> R1 : dump
+TS1 .d.> DB2 : save
+R1 .d.> DB2 : save
+
+' load
+DB2 .r.> TS2 : load
+TS2 .d.> Table : load
+Table -d-> "*" R2
+R2 -d-> "*" ColValue
 
 @enduml

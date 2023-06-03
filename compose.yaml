@@ -15,8 +15,6 @@ services:
     build: ./docker/testdata-mysql80
     ports:
       - 19001:3306
-    volumes:
-      - ./docker/testdata-mysql80/init.d:/docker-entrypoint-initdb.d
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: testdata

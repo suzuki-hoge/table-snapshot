@@ -1,10 +1,12 @@
 use crate::core::connector::Connector;
 use anyhow::anyhow;
 use itertools::Itertools;
-use mysql::{from_row, Conn, Opts, OptsBuilder};
+use mysql::Value::NULL;
+use mysql::{from_row, from_value, Conn, Opts, OptsBuilder, Value};
 use r2d2::ManageConnection;
 use r2d2_mysql::MysqlConnectionManager;
 
+use crate::core::types::ColValue::Null;
 use crate::core::types::{ColName, Row, TableName};
 use crate::dump::mysql::column_parser;
 
@@ -19,7 +21,11 @@ pub struct ColumnSchemata {
 }
 
 impl ColumnSchemata {
-    pub fn get_cols(&self) -> Vec<&ColumnSchema> {
+    pub fn get_col_names(self) -> (ColName, Vec<ColName>) {
+        (self.primary_col.col_name, self.cols.into_iter().map(|col| col.col_name).collect())
+    }
+
+    pub fn get_col_refs(&self) -> Vec<&ColumnSchema> {
         let mut cols = self.cols.iter().collect_vec();
         cols.insert(0, &self.primary_col);
         cols
@@ -103,7 +109,7 @@ pub fn get_rows(
     table_schema: &TableSchema,
     column_schemata: &ColumnSchemata,
 ) -> anyhow::Result<Vec<Row>> {
-    let cols = column_schemata.get_cols();
+    let cols = column_schemata.get_col_refs();
 
     conn.query(format!("select {} from {}", cols.iter().map(|cs| cs.as_col()).join(","), table_schema.table_name))
         .map(|result| {
@@ -111,7 +117,14 @@ pub fn get_rows(
                 .map(|x| x.unwrap())
                 .map(|row| {
                     (0..column_schemata.len())
-                        .map(|i| column_parser::parse(cols[i], row.get(i).unwrap()))
+                        .map(|i| {
+                            let value: Value = row.get(i).unwrap();
+                            if value == NULL {
+                                Null
+                            } else {
+                                column_parser::parse(cols[i], from_value(value))
+                            }
+                        })
                         .collect_vec()
                 })
                 .map(|cols| Row::new(cols[0].clone().as_primary_value(), cols))
