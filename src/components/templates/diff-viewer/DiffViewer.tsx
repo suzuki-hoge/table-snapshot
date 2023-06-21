@@ -1,0 +1,72 @@
+import { type FC, Fragment, useState } from 'react'
+
+import styles from './DiffViewer.module.scss'
+import { type Diff } from '../../../types/Tmp'
+import { DiffContent } from '../../organisms/diff-content/DiffContent'
+import { IconVisible } from '../../atoms/icon-visible/IconVisible'
+import { Header } from '../../molecules/header/Header'
+import { IconBack } from '../../atoms/icon-back/IconBack'
+import { ModalWindow } from '../../molecules/ModalWindow/ModalWindow'
+import { IconSearch } from '../../atoms/icon-search/IconSearch'
+
+interface Props {
+  diffs: Diff[]
+  ignoreTableNames: string[]
+}
+
+export const DiffViewer: FC<Props> = (props) => {
+  const [ignoreTableNames, setIgnoreTableNames] = useState(
+    props.ignoreTableNames
+  )
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  return (
+    <div className={styles.template}>
+      <Header
+        globals={<IconBack variant={'large'} onClick={() => {}} />}
+        locals={
+          <IconSearch
+            variant={'large'}
+            onClick={() => {
+              setIsModalOpen(true)
+            }}
+          />
+        }
+      />
+      <div className={styles.component}>
+        {props.diffs.map((diff) =>
+          !ignoreTableNames.includes(diff.tableName) ? (
+            <DiffContent key={diff.tableName} diff={diff} />
+          ) : (
+            <Fragment key={diff.tableName}></Fragment>
+          )
+        )}
+      </div>
+      <ModalWindow isOpen={isModalOpen} setIsOpen={setIsModalOpen}>
+        {props.diffs
+          .map((diff) => diff.tableName)
+          .map((tableName, i) => (
+            <div key={i} className={styles.item}>
+              <span>{tableName}</span>
+              <IconVisible
+                variant={'medium'}
+                visible={!ignoreTableNames.includes(tableName)}
+                onClick={() => {
+                  if (!ignoreTableNames.includes(tableName)) {
+                    setIgnoreTableNames(ignoreTableNames.concat([tableName]))
+                  } else {
+                    setIgnoreTableNames(
+                      ignoreTableNames.filter(
+                        (ignoreTableName) => ignoreTableName !== tableName
+                      )
+                    )
+                  }
+                }}
+              />
+            </div>
+          ))}
+      </ModalWindow>
+    </div>
+  )
+}

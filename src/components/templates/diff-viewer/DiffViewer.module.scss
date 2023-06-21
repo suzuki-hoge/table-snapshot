@@ -1,0 +1,25 @@
+.template {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+
+  .component {
+    display: flex;
+    flex-direction: column;
+    row-gap: 2rem;
+  }
+}
+
+.item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.5rem;
+  padding: 0 0.75rem 0 1rem;
+  overflow-y: scroll;
+
+  span {
+    cursor: pointer;
+  }
+}

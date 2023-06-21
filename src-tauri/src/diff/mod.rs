@@ -101,6 +101,7 @@ fn take_diff<'a>(table1: &'a Table, table2: &'a Table) -> SnapshotDiff<'a> {
 }
 
 fn merge_col_names<'a>(col_names1: &'a [ColName], col_names2: &'a [ColName]) -> Vec<&'a ColName> {
+    // todo: first item must be primary col
     let mut col_names = vec![];
     for i in 0..max(col_names1.len(), col_names2.len()) {
         if i < col_names1.len() && !col_names.contains(&&col_names1[i]) {

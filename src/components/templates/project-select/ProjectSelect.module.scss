@@ -1,0 +1,29 @@
+.template {
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
+
+  .component {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1rem;
+
+    .item {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      column-gap: 1rem;
+
+      div:first-child {
+        width: 100%;
+      }
+
+      .icons {
+        display: flex;
+        flex-direction: row;
+        column-gap: 0.5rem;
+      }
+    }
+  }
+}

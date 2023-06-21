@@ -1,0 +1,21 @@
+.component {
+  border-radius: var(--radius-flame);
+  border: solid 1px var(--color-frame);
+  padding: 0.5rem 1rem 0.5rem 1rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  row-gap: 0.5rem;
+
+  .label {
+  }
+
+  .text {
+    font-size: var(--font-small);
+  }
+}
+
+.selected {
+  background-color: lighten(lightgrey, 10%);
+}

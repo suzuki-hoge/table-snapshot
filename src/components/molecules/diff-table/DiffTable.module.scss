@@ -1,0 +1,55 @@
+@mixin border {
+  border: solid 1px var(--color-frame);
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: solid 1px var(--color-frame);
+  border-radius: var(--radius-flame);
+  text-align: center;
+  vertical-align: center;
+
+  tr {
+    height: 2rem;
+
+    th {
+      border-right: solid 1px var(--color-frame);
+      padding: 0 1em;
+    }
+
+    th:last-child {
+      border-right: none;
+    }
+
+    td {
+      border-right: solid 1px var(--color-frame);
+      border-top: solid 1px var(--color-frame);
+      padding: 0 1em;
+    }
+
+    td:last-child {
+      border-right: none;
+    }
+  }
+
+  tr:last-child td:last-child {
+    border-bottom-right-radius: calc(#{var(--radius-flame)} - 1px);
+  }
+}
+
+.stay {
+  background-color: var(--color-diff-stay);
+}
+
+.added {
+  background-color: var(--color-diff-added);
+}
+
+.deleted {
+  background-color: var(--color-diff-deleted);
+}
+
+.none {
+  background-color: var(--color-diff-none);
+}
