@@ -8,6 +8,7 @@ tauri-build = { version = "1.2", features = [] }
 
 [dependencies]
 anyhow = "1.0.68"
+chrono = "0.4.26"
 dialoguer = "0.10.4"
 itertools = "0.10.5"
 md5 = "0.7.0"

@@ -1,6 +1,9 @@
-use itertools::Itertools;
 use std::cmp::max;
 use std::collections::BTreeSet;
+
+use chrono::Local;
+use itertools::Itertools;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::domain::schema::{ColName, Hash, PrimaryColName, PrimaryValue, TableName};
@@ -8,21 +11,31 @@ use crate::domain::snapshot::ColValue::*;
 
 pub type SnapshotId = String;
 
+pub type SnapshotName = String;
+
 pub fn create_snapshot_id() -> SnapshotId {
     Uuid::new_v4().to_string()
 }
 
+#[derive(Eq, PartialEq, Debug)]
 pub struct SnapshotSummary {
     pub snapshot_id: SnapshotId,
-    pub table_name: TableName,
+    pub snapshot_name: SnapshotName,
+    pub create_at: String,
 }
 
 impl SnapshotSummary {
-    pub fn new(snapshot_id: SnapshotId, table_name: TableName) -> Self {
-        Self { snapshot_id, table_name }
+    pub fn create(snapshot_id: &SnapshotId, snapshot_name: &SnapshotName) -> Self {
+        let create_at = format!("{}", Local::now().format("%Y-%m-%d %H:%M:%S"));
+        Self { snapshot_id: snapshot_id.clone(), snapshot_name: snapshot_name.clone(), create_at }
+    }
+
+    pub fn new<S: Into<String>>(snapshot_id: &SnapshotId, snapshot_name: S, create_at: S) -> Self {
+        Self { snapshot_id: snapshot_id.clone(), snapshot_name: snapshot_name.into(), create_at: create_at.into() }
     }
 }
 
+#[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
 pub struct TableSnapshot {
     pub table_name: TableName,
     pub primary_col_name: PrimaryColName,
@@ -32,15 +45,10 @@ pub struct TableSnapshot {
 }
 
 impl TableSnapshot {
-    pub fn new(
-        table_name: TableName,
-        primary_col_name: PrimaryColName,
-        col_names: Vec<ColName>,
-        row_snapshots: Vec<RowSnapshot>,
-    ) -> Self {
+    pub fn new(table_name: &TableName, primary_col_name: PrimaryColName, col_names: Vec<ColName>, row_snapshots: Vec<RowSnapshot>) -> Self {
         let row_hashes = row_snapshots.iter().map(|row_snapshot| &row_snapshot.hash).join("");
         let hash = format!("{:?}", md5::compute(format!("{}{}{}", primary_col_name, col_names.join(""), row_hashes)));
-        Self { table_name, primary_col_name, col_names, hash, row_snapshots }
+        Self { table_name: table_name.clone(), primary_col_name, col_names, hash, row_snapshots }
     }
 
     pub fn get_primary_col_values(&self) -> Vec<&PrimaryColValue> {
@@ -76,6 +84,7 @@ impl TableSnapshot {
     }
 }
 
+#[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
 pub struct RowSnapshot {
     pub primary_col_value: PrimaryColValue,
     pub col_values: Vec<ColValue>,
@@ -96,7 +105,7 @@ impl RowSnapshot {
 
 pub type PrimaryColValue = ColValue;
 
-#[derive(Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Debug)]
+#[derive(Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Debug)]
 pub enum ColValue {
     SimpleNumber(String),
     BitNumber(String),

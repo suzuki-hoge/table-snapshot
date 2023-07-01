@@ -6,9 +6,5 @@ pub trait TargetDbAdapter {
 
     fn get_col_schemata(&mut self, table_schema: &TableSchema) -> anyhow::Result<ColumnSchemata>;
 
-    fn get_row_snapshots(
-        &mut self,
-        table_schema: &TableSchema,
-        column_schemata: &ColumnSchemata,
-    ) -> anyhow::Result<Vec<RowSnapshot>>;
+    fn get_row_snapshots(&mut self, table_schema: &TableSchema, column_schemata: &ColumnSchemata) -> anyhow::Result<Vec<RowSnapshot>>;
 }

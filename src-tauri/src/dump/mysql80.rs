@@ -19,16 +19,13 @@ pub struct TargetDbMysql80 {
 impl TargetDbMysql80 {
     pub fn new(project: &Project) -> anyhow::Result<Self> {
         let conn = TargetDbMysql80::create_connection(project)?;
-        let schema = project.schema.clone(); // todo: clone
+        let schema = project.schema.clone();
 
         Ok(Self { conn, schema })
     }
 
     fn create_connection(project: &Project) -> anyhow::Result<Conn> {
-        let url = format!(
-            "mysql://{}:{}@{}:{}/{}",
-            project.user, project.password, project.host, project.port, project.schema
-        );
+        let url = format!("mysql://{}:{}@{}:{}/{}", project.user, project.password, project.host, project.port, project.schema);
         let opt = Opts::from_url(&url).unwrap();
         let builder = OptsBuilder::from_opts(opt);
         let manager = MysqlConnectionManager::new(builder);
@@ -39,10 +36,7 @@ impl TargetDbMysql80 {
 impl TargetDbAdapter for TargetDbMysql80 {
     fn get_table_schemata(&mut self) -> anyhow::Result<Vec<TableSchema>> {
         self.conn
-            .query(format!(
-                "select table_name from information_schema.tables where table_schema = '{}' order by table_name",
-                self.schema
-            ))
+            .query(format!("select table_name from information_schema.tables where table_schema = '{}' order by table_name", self.schema))
             .map(|result| {
                 result
                     .map(|x| x.unwrap())
@@ -85,19 +79,11 @@ impl TargetDbAdapter for TargetDbMysql80 {
         Ok(ColumnSchemata::new(primary_col, cols))
     }
 
-    fn get_row_snapshots(
-        &mut self,
-        table_schema: &TableSchema,
-        column_schemata: &ColumnSchemata,
-    ) -> anyhow::Result<Vec<RowSnapshot>> {
+    fn get_row_snapshots(&mut self, table_schema: &TableSchema, column_schemata: &ColumnSchemata) -> anyhow::Result<Vec<RowSnapshot>> {
         let cols = column_schemata.get_all_col_refs();
 
         self.conn
-            .query(format!(
-                "select {} from {}",
-                cols.iter().map(|col| as_select_col(col)).join(","),
-                table_schema.table_name
-            ))
+            .query(format!("select {} from {}", cols.iter().map(|col| as_select_col(col)).join(","), table_schema.table_name))
             .map(|result| {
                 result
                     .map(|x| x.unwrap())
@@ -148,7 +134,7 @@ fn parse_col_value(column_schema: &ColumnSchema, value: String) -> ColValue {
 mod adapter_tests {
     use itertools::Itertools;
 
-    use crate::domain::project::Project;
+    use crate::domain::project::{create_project_id, Project};
     use crate::domain::project::Rdbms::Mysql;
     use crate::domain::snapshot::ColValue::*;
     use crate::dump::adapter::TargetDbAdapter;
@@ -160,7 +146,7 @@ mod adapter_tests {
 
     #[test]
     fn test() -> anyhow::Result<()> {
-        let project = Project::new(Mysql, "user","password","127.0.0.1","19001","testdata");
+        let project = Project::new(&create_project_id(), Mysql, "user","password","127.0.0.1","19001","testdata");
 
         let mut adapter = TargetDbMysql80::new(&project)?;
         
@@ -489,11 +475,7 @@ mod parse_col_value_tests {
 
     fn sut(data_type: &str, column_type: &str, value: &str) -> ColValue {
         parse_col_value(
-            &ColumnSchema {
-                col_name: "col_test".to_string(),
-                data_type: data_type.to_string(),
-                column_type: column_type.to_string(),
-            },
+            &ColumnSchema { col_name: "col_test".to_string(), data_type: data_type.to_string(), column_type: column_type.to_string() },
             value.to_string(),
         )
     }
