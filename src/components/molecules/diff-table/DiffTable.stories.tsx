@@ -253,3 +253,23 @@ export const ColMismatched: Story = {
     },
   },
 }
+
+export const RowModifiedStringId: Story = {
+  args: {
+    primaryValues: ['"EF974256-0BDE-4170-A2FC-4BDBBD696FB5"'],
+    primaryColName: 'id',
+    colNames: ['name', 'age'],
+    rows1: {
+      '"EF974256-0BDE-4170-A2FC-4BDBBD696FB5"': {
+        name: { status: 'deleted', value: '"John"' },
+        age: { status: 'deleted', value: '29' },
+      },
+    },
+    rows2: {
+      '"EF974256-0BDE-4170-A2FC-4BDBBD696FB5"': {
+        name: { status: 'added', value: '"Jane"' },
+        age: { status: 'added', value: '15' },
+      },
+    },
+  },
+}

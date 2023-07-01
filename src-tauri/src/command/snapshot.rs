@@ -1,6 +1,6 @@
+use crate::domain::schema::TableName;
+use crate::domain::snapshot::SnapshotId;
 use serde::{Deserialize, Serialize};
-
-use table_snapshot::core::types::{SnapshotId, TableName};
 
 #[derive(Serialize, Deserialize)]
 pub struct TableSummaryView {
