@@ -3,7 +3,6 @@ use itertools::Itertools;
 use mysql::{from_row, Conn};
 
 use crate::domain::project::ProjectId;
-use crate::domain::schema::TableName;
 use crate::domain::snapshot::{SnapshotId, SnapshotSummary, TableSnapshot};
 
 pub fn all_snapshot_summaries(conn: &mut Conn, project_id: &ProjectId) -> anyhow::Result<Vec<SnapshotSummary>> {
@@ -41,8 +40,8 @@ pub fn delete_snapshot_summary(conn: &mut Conn, snapshot_id: &SnapshotId) -> any
     Ok(())
 }
 
-pub fn find_table_snapshot(conn: &mut Conn, snapshot_id: &SnapshotId, table_name: &TableName) -> anyhow::Result<Option<TableSnapshot>> {
-    conn.query(format!("select data from table_snapshot where snapshot_id = '{snapshot_id}' and table_name = '{table_name}'"))
+pub fn find_table_snapshots(conn: &mut Conn, snapshot_id: &SnapshotId) -> anyhow::Result<Vec<TableSnapshot>> {
+    conn.query(format!("select data from table_snapshot where snapshot_id = '{snapshot_id}'"))
         .map(|result| {
             result
                 .map(|x| x.unwrap())
@@ -51,7 +50,7 @@ pub fn find_table_snapshot(conn: &mut Conn, snapshot_id: &SnapshotId, table_name
                     let table_snapshot: TableSnapshot = serde_json::from_str(&data).unwrap();
                     table_snapshot
                 })
-                .find_or_first(|_| true)
+                .collect_vec()
         })
         .map_err(|e| anyhow!(e))
 }
@@ -70,7 +69,8 @@ mod tests {
     use crate::db::create_connection;
     use crate::db::project::insert_project;
     use crate::db::snapshot::{
-        all_snapshot_summaries, delete_snapshot_summary, find_table_snapshot, insert_snapshot_summary, insert_table_snapshot, update_snapshot_summary,
+        all_snapshot_summaries, delete_snapshot_summary, find_table_snapshots, insert_snapshot_summary, insert_table_snapshot,
+        update_snapshot_summary,
     };
     use crate::domain::project::Rdbms::Mysql;
     use crate::domain::project::{create_project_id, Project};
@@ -148,8 +148,8 @@ mod tests {
         let table_name = "items".to_string();
 
         // find
-        let table_snapshot_opt = find_table_snapshot(&mut conn, &snapshot_id, &table_name)?;
-        assert_eq!(None, table_snapshot_opt);
+        let table_snapshots = find_table_snapshots(&mut conn, &snapshot_id)?;
+        assert_eq!(0, table_snapshots.len());
 
         // insert
         let row_snapshot1 = RowSnapshot::new(vec![n("1"), s("123"), n("1200")]);
@@ -158,8 +158,8 @@ mod tests {
             TableSnapshot::new(&table_name, "id".to_string(), vec!["code".to_string(), "price".to_string()], vec![row_snapshot1, row_snapshot2]);
         insert_table_snapshot(&mut conn, &snapshot_id, &table_snapshot)?;
 
-        let table_snapshot_opt = find_table_snapshot(&mut conn, &snapshot_id, &table_name)?;
-        assert_eq!(Some(table_snapshot), table_snapshot_opt);
+        let table_snapshots = find_table_snapshots(&mut conn, &snapshot_id)?;
+        assert_eq!(vec![table_snapshot], table_snapshots);
 
         Ok(())
     }

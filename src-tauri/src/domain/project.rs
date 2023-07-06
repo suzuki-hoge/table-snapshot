@@ -1,9 +1,8 @@
-use uuid::Uuid;
-
 pub type ProjectId = String;
 
+#[cfg(test)]
 pub fn create_project_id() -> ProjectId {
-    Uuid::new_v4().to_string()
+    uuid::Uuid::new_v4().to_string()
 }
 
 #[derive(Eq, PartialEq, Debug)]

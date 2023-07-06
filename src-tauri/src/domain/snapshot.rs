@@ -150,35 +150,4 @@ impl ColValue {
             ParseError => "parse error".to_string(),
         }
     }
-
-    pub fn serialize(&self) -> String {
-        match self {
-            SimpleNumber(v) => format!(r#""SimpleNumber.{v}""#),
-            BitNumber(v) => format!(r#""BitNumber.{v}""#),
-            SimpleString(v) => format!(r#""SimpleString.{v}""#),
-            DateString(v) => format!(r#""DateString.{v}""#),
-            BinaryString(v) => format!(r#""BinaryString.{v}""#),
-            JsonString(v) => format!(r#""JsonString.{}""#, v.replace('"', r#"\""#)),
-            Null => r#""Null.""#.to_string(),
-            ParseError => r#""ParseError.""#.to_string(),
-        }
-    }
-
-    pub fn deserialize(s: String) -> Self {
-        let s = &s[1..s.len() - 1];
-        let sp = s.split('.').collect_vec();
-        let p1 = sp[0];
-        let p2 = sp[1];
-        match p1 {
-            "SimpleNumber" => SimpleNumber(p2.to_string()),
-            "BitNumber" => BitNumber(p2.to_string()),
-            "SimpleString" => SimpleString(p2.to_string()),
-            "DateString" => DateString(p2.to_string()),
-            "BinaryString" => BinaryString(p2.to_string()),
-            "JsonString" => JsonString(p2.replace('\\', "")),
-            "Null" => Null,
-            "ParseError" => ParseError,
-            _ => unreachable!(),
-        }
-    }
 }

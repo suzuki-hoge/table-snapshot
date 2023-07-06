@@ -62,7 +62,7 @@ impl TargetDbAdapter for TargetDbMysql80 {
                     .collect_vec()
             }).map_err(|e| anyhow!(e))?;
         // todo: case [ no primary col ]
-        let primary_col = unique_cols[0].clone(); // todo clone
+        let primary_col = unique_cols[0].clone();
 
         let cols: Vec<ColumnSchema> = self.conn.query(
             format!("select column_name, data_type, column_type from information_schema.columns where table_schema = '{}' and table_name = '{}' and column_key = '' order by ordinal_position", self.schema, table_schema.table_name))

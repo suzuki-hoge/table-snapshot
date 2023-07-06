@@ -1,5 +1,4 @@
 use anyhow::anyhow;
-use itertools::Itertools;
 use mysql::{from_row, Conn};
 
 use crate::domain::diff::SnapshotDiff;
@@ -15,7 +14,7 @@ pub fn find_snapshot_diff(conn: &mut Conn, snapshot_id1: &SnapshotId, snapshot_i
                     let snapshot_diff: SnapshotDiff = serde_json::from_str(&data).unwrap();
                     snapshot_diff
                 })
-                .find_or_first(|_| true)
+                .next()
         })
         .map_err(|e| anyhow!(e))
 }
@@ -33,14 +32,13 @@ mod tests {
     use crate::db::create_connection;
     use crate::db::diff::{find_snapshot_diff, insert_snapshot_diff};
     use crate::db::project::insert_project;
-    use crate::db::snapshot::{insert_snapshot_summary};
+    use crate::db::snapshot::insert_snapshot_summary;
     use crate::domain::diff::ColDiff::{Deleted, NoValue};
     use crate::domain::diff::{create_diff_id, SnapshotDiff, TableDiff};
     use crate::domain::project::Rdbms::Mysql;
     use crate::domain::project::{create_project_id, Project};
     use crate::domain::snapshot::ColValue::{SimpleNumber, SimpleString};
     use crate::domain::snapshot::{create_snapshot_id, ColValue, SnapshotSummary};
-    
 
     fn n(s: &str) -> ColValue {
         SimpleNumber(s.to_string())
@@ -78,8 +76,8 @@ mod tests {
 
         // insert
         let mut table_diff = TableDiff::init(&[&n("1"), &n("2")], &"id".to_string(), vec![&"name".to_string()]);
-        table_diff.row_diffs1.push(vec![("name".to_string(), Deleted(s("John")))].into_iter().collect());
-        table_diff.row_diffs2.push(vec![("name".to_string(), NoValue)].into_iter().collect());
+        table_diff.row_diffs1.insert(n("1").as_primary_value(), vec![("name".to_string(), Deleted(s("John")))].into_iter().collect());
+        table_diff.row_diffs2.insert(n("2").as_primary_value(), vec![("name".to_string(), NoValue)].into_iter().collect());
 
         let snapshot_diff = SnapshotDiff::new(&create_diff_id(), &snapshot_id1, &snapshot_id2, vec![table_diff]);
         insert_snapshot_diff(&mut conn, &snapshot_diff)?;
