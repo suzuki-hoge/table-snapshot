@@ -1,14 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
 import { ColorTagCard } from './ColorTagCard'
-import { colors } from '../../../types/Color'
 
 const meta = {
   title: 'Molecules/ColorTagCard',
   component: ColorTagCard,
   tags: ['autodocs'],
   argTypes: {
-    variant: { control: 'select', options: colors },
+    variant: {
+      control: 'select',
+      options: ['red', 'yellow', 'green', 'blue', 'purple'],
+    },
   },
 } satisfies Meta<typeof ColorTagCard>
 

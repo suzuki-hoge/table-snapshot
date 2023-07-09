@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
 import { DiffViewer } from './DiffViewer'
-import { type Diff } from '../../../types/Tmp'
+import { type TableDiff } from '../../../types'
 
 const meta = {
   title: 'Templates/DiffViewer',
@@ -13,11 +13,11 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const diff: Omit<Diff, 'tableName'> = {
+const tableDiff: Omit<TableDiff, 'tableName'> = {
   primaryValues: ['1', '2'],
   primaryColName: 'id',
   colNames: ['name', 'age'],
-  rows1: {
+  rowDiffs1: {
     '1': {
       name: { status: 'deleted', value: '"John"' },
       age: { status: 'deleted', value: '29' },
@@ -27,7 +27,7 @@ const diff: Omit<Diff, 'tableName'> = {
       age: { status: 'deleted', value: '31' },
     },
   },
-  rows2: {
+  rowDiffs2: {
     '1': {
       name: { status: 'added', value: '"Jane"' },
       age: { status: 'added', value: '15' },
@@ -63,7 +63,7 @@ const tableNames = [
 
 export const Component: Story = {
   args: {
-    diffs: tableNames.map((tableName) => ({ tableName, ...diff })),
+    tableDiffs: tableNames.map((tableName) => ({ tableName, ...tableDiff })),
     ignoreTableNames: [],
   },
 }

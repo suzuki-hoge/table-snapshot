@@ -1,24 +1,24 @@
 import { type FC, useState } from 'react'
 import styles from './SnapshotInput.module.scss'
-import { type Snapshot } from '../../../types/Tmp'
+import { type SnapshotSummary } from '../../../types'
 import { InputText } from '../../atoms/input-text/InputText'
 
 interface Props {
-  snapshot?: Snapshot
+  snapshotSummary?: SnapshotSummary
 }
 
 export const SnapshotInput: FC<Props> = (props) => {
-  const [title, setTitle] = useState(props.snapshot?.title ?? '')
+  const [name, setName] = useState(props.snapshotSummary?.name ?? '')
 
   return (
     <div className={styles.component}>
       <div className={styles.item}>
         <span>Name</span>
         <InputText
-          value={title}
+          value={name}
           length={20}
           onInput={(e) => {
-            setTitle(e.target.value)
+            setName(e.target.value)
           }}
         />
       </div>

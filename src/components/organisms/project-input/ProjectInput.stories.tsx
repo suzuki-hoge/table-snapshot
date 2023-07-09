@@ -21,13 +21,12 @@ export const Update: Story = {
     project: {
       id: '92B07638-8EBA-471D-BDC1-71685B21EFE4',
       name: 'My Laravel Project',
-      color: 'yellow',
+      rdbms: 'MySQL',
       user: 'admin',
       password: 'admin-pw',
       host: 'localhost',
       port: '3306',
       schema: 'my-laravel-project',
-      rdbms: 'MySQL',
     },
   },
 }

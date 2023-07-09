@@ -1,9 +1,8 @@
 import { type FC } from 'react'
 import styles from './ColorTag.module.scss'
-import { type Color } from '../../../types/Color'
 
 interface Props {
-  variant: Color
+  variant: 'red' | 'yellow' | 'green' | 'blue' | 'purple'
 }
 
 const colors = {

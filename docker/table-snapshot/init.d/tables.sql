@@ -1,6 +1,7 @@
 create table project
 (
     project_id char(36),
+    name       varchar(32),
     rdbms      varchar(16),
     user       varchar(32),
     password   varchar(32),

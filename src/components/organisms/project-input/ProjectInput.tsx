@@ -1,8 +1,7 @@
 import { type FC, useState } from 'react'
 import styles from './ProjectInput.module.scss'
-import { type Project } from '../../../types/Tmp'
+import { type Project } from '../../../types'
 import { InputText } from '../../atoms/input-text/InputText'
-import { ColorTag } from '../../atoms/color-tag/ColorTag'
 
 interface Props {
   project?: Project
@@ -27,16 +26,6 @@ export const ProjectInput: FC<Props> = (props) => {
             setName(e.target.value)
           }}
         />
-      </div>
-      <div className={styles.item}>
-        <span>Color</span>
-        <div className={styles.cols}>
-          <ColorTag variant="red" />
-          <ColorTag variant="yellow" />
-          <ColorTag variant="green" />
-          <ColorTag variant="blue" />
-          <ColorTag variant="purple" />
-        </div>
       </div>
       <div className={styles.item}>
         <span>RDBMS</span>

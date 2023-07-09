@@ -1,11 +1,10 @@
 import { type FC } from 'react'
-import { type Color } from '../../../types/Color'
 import { ColorTag } from '../../atoms/color-tag/ColorTag'
 import styles from './ColorTagCard.module.scss'
 
 interface Props {
   label: string
-  variant: Color
+  variant: 'red' | 'yellow' | 'green' | 'blue' | 'purple'
   onClick: () => void
 }
 

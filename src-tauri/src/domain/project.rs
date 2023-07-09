@@ -13,6 +13,7 @@ pub enum Rdbms {
 #[derive(Eq, PartialEq, Debug)]
 pub struct Project {
     pub project_id: ProjectId,
+    pub name: String,
     pub rdbms: Rdbms,
     pub user: String,
     pub password: String,
@@ -22,9 +23,11 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn new<S: Into<String>>(project_id: &ProjectId, rdbms: Rdbms, user: S, password: S, host: S, port: S, schema: S) -> Self {
+    #[allow(clippy::too_many_arguments)]
+    pub fn new<S: Into<String>>(project_id: &ProjectId, name: S, rdbms: Rdbms, user: S, password: S, host: S, port: S, schema: S) -> Self {
         Self {
             project_id: project_id.clone(),
+            name: name.into(),
             rdbms,
             user: user.into(),
             password: password.into(),

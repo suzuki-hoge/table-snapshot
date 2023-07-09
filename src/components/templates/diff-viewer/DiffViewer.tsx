@@ -1,7 +1,7 @@
 import { type FC, Fragment, useState } from 'react'
 
 import styles from './DiffViewer.module.scss'
-import { type Diff } from '../../../types/Tmp'
+import { type TableDiff } from '../../../types'
 import { DiffContent } from '../../organisms/diff-content/DiffContent'
 import { IconVisible } from '../../atoms/icon-visible/IconVisible'
 import { Header } from '../../molecules/header/Header'
@@ -10,7 +10,7 @@ import { ModalWindow } from '../../molecules/ModalWindow/ModalWindow'
 import { IconSearch } from '../../atoms/icon-search/IconSearch'
 
 interface Props {
-  diffs: Diff[]
+  tableDiffs: TableDiff[]
   ignoreTableNames: string[]
 }
 
@@ -35,16 +35,16 @@ export const DiffViewer: FC<Props> = (props) => {
         }
       />
       <div className={styles.component}>
-        {props.diffs.map((diff) =>
-          !ignoreTableNames.includes(diff.tableName) ? (
-            <DiffContent key={diff.tableName} diff={diff} />
+        {props.tableDiffs.map((tableDiff) =>
+          !ignoreTableNames.includes(tableDiff.tableName) ? (
+            <DiffContent key={tableDiff.tableName} tableDiff={tableDiff} />
           ) : (
-            <Fragment key={diff.tableName}></Fragment>
+            <Fragment key={tableDiff.tableName}></Fragment>
           )
         )}
       </div>
       <ModalWindow isOpen={isModalOpen} setIsOpen={setIsModalOpen}>
-        {props.diffs
+        {props.tableDiffs
           .map((diff) => diff.tableName)
           .map((tableName, i) => (
             <div key={i} className={styles.item}>

@@ -11,6 +11,7 @@ use crate::domain::project::{Project, ProjectId};
 pub struct ProjectJson {
     pub project_id: ProjectId,
     pub rdbms: String,
+    pub name: String,
     pub user: String,
     pub password: String,
     pub host: String,
@@ -22,6 +23,7 @@ impl ProjectJson {
     fn from(project: Project) -> Self {
         Self {
             project_id: project.project_id,
+            name: project.name,
             rdbms: match project.rdbms {
                 Mysql => "mysql".to_string(),
             },
@@ -36,6 +38,7 @@ impl ProjectJson {
     fn into(self) -> Project {
         Project::new(
             &self.project_id,
+            &self.name,
             match self.rdbms.as_ref() {
                 "mysql" => Mysql,
                 _ => unreachable!(),

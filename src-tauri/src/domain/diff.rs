@@ -4,7 +4,7 @@ use itertools::Itertools;
 use uuid::Uuid;
 
 use crate::domain::diff::ColDiff::*;
-use crate::domain::schema::{ColName, Hash, PrimaryColName, PrimaryValue};
+use crate::domain::schema::{ColName, Hash, PrimaryColName, PrimaryValue, TableName};
 use crate::domain::snapshot::{ColValue, PrimaryColValue, SnapshotId, TableSnapshot};
 use serde::{Deserialize, Serialize};
 
@@ -30,6 +30,7 @@ impl SnapshotDiff {
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Debug)]
 pub struct TableDiff {
+    pub table_name: TableName,
     pub primary_col_values: Vec<PrimaryColValue>,
     pub primary_col_name: PrimaryColName,
     pub col_names: Vec<ColName>,
@@ -38,8 +39,14 @@ pub struct TableDiff {
 }
 
 impl TableDiff {
-    pub fn init(primary_col_values: &[&PrimaryColValue], primary_col_name: &PrimaryColName, col_names: Vec<&ColName>) -> Self {
+    pub fn init(
+        table_name: &TableName,
+        primary_col_values: &[&PrimaryColValue],
+        primary_col_name: &PrimaryColName,
+        col_names: Vec<&ColName>,
+    ) -> Self {
         Self {
+            table_name: table_name.clone(),
             primary_col_values: primary_col_values.iter().map(|&primary_col_value| primary_col_value.clone()).collect_vec(),
             primary_col_name: primary_col_name.clone(),
             col_names: col_names.into_iter().cloned().collect(),
@@ -57,8 +64,6 @@ pub enum ColDiff {
     Deleted(ColValue),
 }
 
-// here
-
 pub fn create_table_diff(table_snapshot1: Option<&TableSnapshot>, table_snapshot2: Option<&TableSnapshot>) -> TableDiff {
     match (table_snapshot1, table_snapshot2) {
         (Some(table_snapshot1), Some(table_snapshot2)) => take_table_snapshot_diff(table_snapshot1, table_snapshot2),
@@ -75,7 +80,8 @@ fn take_table_snapshot_diff(table_snapshot1: &TableSnapshot, table_snapshot2: &T
     let total_col_names = table_snapshot1.merge_col_names(table_snapshot2);
 
     let primary_col_values = table_snapshot1.merge_primary_col_values(table_snapshot2);
-    let mut snapshot_diff = TableDiff::init(&primary_col_values, &table_snapshot1.primary_col_name, total_col_names.clone());
+    let mut snapshot_diff =
+        TableDiff::init(&table_snapshot1.table_name, &primary_col_values, &table_snapshot1.primary_col_name, total_col_names.clone());
 
     let rows1 = parse_rows(table_snapshot1);
     let rows2 = parse_rows(table_snapshot2);
@@ -146,7 +152,8 @@ fn parse_rows<'a>(table_snapshot: &'a TableSnapshot) -> Rows<'a> {
 
 fn create_missing_pair_diff(table_snapshot: &TableSnapshot, n: usize) -> TableDiff {
     let primary_col_values = table_snapshot.get_primary_col_values();
-    let mut snapshot_diff = TableDiff::init(&primary_col_values, &table_snapshot.primary_col_name, table_snapshot.col_names.iter().collect());
+    let mut snapshot_diff =
+        TableDiff::init(&table_snapshot.table_name, &primary_col_values, &table_snapshot.primary_col_name, table_snapshot.col_names.iter().collect());
 
     let rows = parse_rows(table_snapshot);
 

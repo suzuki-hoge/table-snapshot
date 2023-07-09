@@ -146,7 +146,7 @@ mod adapter_tests {
 
     #[test]
     fn test() -> anyhow::Result<()> {
-        let project = Project::new(&create_project_id(), Mysql, "user","password","127.0.0.1","19001","testdata");
+        let project = Project::new(&create_project_id(), "test-project", Mysql, "user","password","127.0.0.1","19001","testdata");
 
         let mut adapter = TargetDbMysql80::new(&project)?;
         

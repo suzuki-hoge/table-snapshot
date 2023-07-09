@@ -1,6 +1,6 @@
 import { type FC, useState } from 'react'
 import styles from './ProjectSelect.module.scss'
-import { type Project } from '../../../types/Tmp'
+import { type Project } from '../../../types'
 import { ColorTagCard } from '../../molecules/color-tag-card/ColorTagCard'
 import { Header } from '../../molecules/header/Header'
 import { ModalWindow } from '../../molecules/ModalWindow/ModalWindow'
@@ -47,7 +47,7 @@ export const ProjectSelect: FC<Props> = (props) => {
           <div key={i} className={styles.item}>
             <ColorTagCard
               label={project.name}
-              variant={project.color}
+              variant="green"
               onClick={() => {
                 console.log(project.id)
               }}

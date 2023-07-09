@@ -5,18 +5,18 @@ use crate::domain::project::Rdbms::Mysql;
 use crate::domain::project::{Project, ProjectId};
 
 pub fn all_projects(conn: &mut Conn) -> anyhow::Result<Vec<Project>> {
-    conn.query("select project_id, rdbms, user, password, host, port, `schema` from project order by project_id")
+    conn.query("select project_id, name, rdbms, user, password, host, port, `schema` from project order by project_id")
         .map(|result| {
             result
                 .map(|x| x.unwrap())
                 .map(|row| {
-                    let (project_id, rdbms, user, password, host, port, schema) =
-                        from_row::<(ProjectId, String, String, String, String, String, String)>(row);
+                    let (project_id, name, rdbms, user, password, host, port, schema) =
+                        from_row::<(ProjectId, String, String, String, String, String, String, String)>(row);
                     let rdbms = match rdbms.as_ref() {
                         "mysql" => Mysql,
                         _ => unreachable!(),
                     };
-                    Project::new(&project_id, rdbms, user, password, host, port, schema)
+                    Project::new(&project_id, name, rdbms, user, password, host, port, schema)
                 })
                 .collect()
         })
@@ -25,9 +25,10 @@ pub fn all_projects(conn: &mut Conn) -> anyhow::Result<Vec<Project>> {
 
 pub fn insert_project(conn: &mut Conn, project: &Project) -> anyhow::Result<()> {
     conn.prep_exec(
-        "insert into project values (?, ?, ?, ?, ?, ?, ?)",
+        "insert into project values (?, ?, ?, ?, ?, ?, ?, ?)",
         (
             &project.project_id,
+            &project.name,
             match project.rdbms {
                 Mysql => "mysql",
             },
@@ -43,8 +44,9 @@ pub fn insert_project(conn: &mut Conn, project: &Project) -> anyhow::Result<()> 
 
 pub fn update_project(conn: &mut Conn, project: &Project) -> anyhow::Result<()> {
     conn.prep_exec(
-        "update project set rdbms = ?, user = ?, password = ?, host = ?, port = ?, `schema` = ? where project_id = ?",
+        "update project set name = ?, rdbms = ?, user = ?, password = ?, host = ?, port = ?, `schema` = ? where project_id = ?",
         (
+            &project.name,
             match project.rdbms {
                 Mysql => "mysql",
             },
@@ -86,7 +88,7 @@ mod tests {
         let project_id = create_snapshot_id();
 
         // insert
-        let project1 = Project::new(&project_id, Mysql, "user", "password", "127.0.0.1", "3306", "test-db");
+        let project1 = Project::new(&project_id, "test-project", Mysql, "user", "password", "127.0.0.1", "3306", "test-db");
         insert_project(&mut conn, &project1)?;
 
         let projects = all_projects(&mut conn)?;
@@ -94,7 +96,7 @@ mod tests {
         assert_eq!(&project1, &projects[0]);
 
         // update
-        let project2 = Project::new(&project_id, Mysql, "user2", "password2", "127.0.0.2", "3307", "test-db2");
+        let project2 = Project::new(&project_id, "test-project-2", Mysql, "user2", "password2", "127.0.0.2", "3307", "test-db2");
         update_project(&mut conn, &project2)?;
 
         let projects = all_projects(&mut conn)?;

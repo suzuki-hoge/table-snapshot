@@ -12,6 +12,16 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Component: Story = {
+export const Create: Story = {
   args: {},
+}
+
+export const Update: Story = {
+  args: {
+    snapshotSummary: {
+      id: 'CC181CDB-07BC-4747-AABC-653CEF526D77',
+      name: '初期状態',
+      createAt: '2023/01/01 12:34:56',
+    },
+  },
 }

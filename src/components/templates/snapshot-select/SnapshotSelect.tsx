@@ -1,7 +1,7 @@
 import { type FC, useState } from 'react'
 import styles from './SnapshotSelect.module.scss'
 import { TextCard } from '../../molecules/text-card/TextCard'
-import { type Snapshot } from '../../../types/Tmp'
+import { type SnapshotSummary } from '../../../types'
 import { Header } from '../../molecules/header/Header'
 import { IconBack } from '../../atoms/icon-back/IconBack'
 import { ModalWindow } from '../../molecules/ModalWindow/ModalWindow'
@@ -13,13 +13,15 @@ import { IconDelete } from '../../atoms/icon-delete/IconDelete'
 import { IconSave } from '../../atoms/icon-save/IconSave'
 
 interface Props {
-  snapshots: Snapshot[]
+  snapshotSummaries: SnapshotSummary[]
 }
 
 export const SnapshotSelect: FC<Props> = (props) => {
   const [isSetting, setIsSetting] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [snapshot, setSnapshot] = useState<Snapshot | undefined>(undefined)
+  const [snapshot, setSnapshot] = useState<SnapshotSummary | undefined>(
+    undefined
+  )
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   return (
@@ -46,17 +48,17 @@ export const SnapshotSelect: FC<Props> = (props) => {
       />
       <div className={styles.component}>
         <div className={styles.snapshots}>
-          {props.snapshots.map((snapshot) => (
-            <div key={snapshot.id} className={styles.item}>
+          {props.snapshotSummaries.map((snapshotSummary) => (
+            <div key={snapshotSummary.id} className={styles.item}>
               <TextCard
-                key={snapshot.id}
-                label={snapshot.title}
-                text={snapshot.created}
-                selected={selectedId === snapshot.id}
+                key={snapshotSummary.id}
+                label={snapshotSummary.name}
+                text={snapshotSummary.createAt}
+                selected={selectedId === snapshotSummary.id}
                 onClick={() => {
                   if (selectedId === null) {
-                    setSelectedId(snapshot.id)
-                  } else if (selectedId === snapshot.id) {
+                    setSelectedId(snapshotSummary.id)
+                  } else if (selectedId === snapshotSummary.id) {
                     setSelectedId(null)
                   } else {
                     alert(2)
@@ -68,7 +70,7 @@ export const SnapshotSelect: FC<Props> = (props) => {
                   <IconEdit
                     variant={'medium'}
                     onClick={() => {
-                      setSnapshot(snapshot)
+                      setSnapshot(snapshotSummary)
                       setIsModalOpen(true)
                     }}
                   />
@@ -91,7 +93,7 @@ export const SnapshotSelect: FC<Props> = (props) => {
           />
         }
       >
-        <SnapshotInput snapshot={snapshot} />
+        <SnapshotInput snapshotSummary={snapshot} />
       </ModalWindow>
     </div>
   )
