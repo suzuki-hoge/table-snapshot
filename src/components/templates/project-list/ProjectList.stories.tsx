@@ -1,13 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react'
 
-import { ProjectSelect } from './ProjectSelect'
+import { ProjectList } from './ProjectList'
+import { withRouter } from 'storybook-addon-react-router-v6'
 
 const meta = {
-  title: 'Templates/ProjectSelect',
-  component: ProjectSelect,
+  title: 'Templates/ProjectList',
+  component: ProjectList,
   tags: ['autodocs'],
   argTypes: {},
-} satisfies Meta<typeof ProjectSelect>
+  decorators: [withRouter],
+} satisfies Meta<typeof ProjectList>
 
 export default meta
 type Story = StoryObj<typeof meta>
